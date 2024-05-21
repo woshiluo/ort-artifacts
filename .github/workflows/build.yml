@@ -25,6 +25,12 @@ jobs:
             cuda: true
             runs-on: ubuntu-22.04
     steps:
+      - uses: easimon/maximize-build-space@v10
+        with:
+          remove-haskell: true
+          remove-android: true
+          remove-codeql: true
+          remove-docker-images: true
       - uses: actions/checkout@v4
       - uses: egor-tensin/setup-gcc@v1
         if: runner.os == 'Linux'
