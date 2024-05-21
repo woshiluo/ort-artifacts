@@ -1,0 +1,72 @@
+name: Build
+on:
+  workflow_dispatch:
+    inputs:
+      onnxruntime-version:
+        type: string
+        description: "ONNX Runtime version (e.g. 1.18.0)"
+        required: true
+env:
+  GCC_VERSION: '11'
+  CMAKE_VERSION: '3.28'
+  PYTHON_VERSION: '3.10'
+  NODE_VERSION: '18'
+  XCODE_VERSION: '14.3'
+  MACOSX_DEPLOYMENT_TARGET: '10.15'
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            cuda: true
+            runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: egor-tensin/setup-gcc@v1
+        if: runner.os == 'Linux'
+        with:
+          version: ${{ env.GCC_VERSION }}
+      - uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: ${{ env.CMAKE_VERSION }}
+      - uses: actions/setup-python@v4
+        id: setup-python
+        continue-on-error: true
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install Python (Linux)
+        if: runner.os == 'Linux' && steps.setup-python.outcome == 'failure'
+        run: |
+          sudo apt-get update -q -y
+          sudo apt-get install software-properties-common
+          sudo add-apt-repository ppa:deadsnakes/ppa
+          sudo apt-get install -q -y \
+            python${{ env.PYTHON_VERSION }} \
+            python${{ env.PYTHON_VERSION }}-distutils \
+            python${{ env.PYTHON_VERSION }}-venv
+          sudo update-alternatives --install /usr/bin/python python /usr/bin/python${{ env.PYTHON_VERSION }} 1
+      - name: Install Python (macOS)
+        if: runner.os == 'macOS' && steps.setup-python.outcome == 'failure'
+        run: brew install python@${{ env.PYTHON_VERSION }}
+      - uses: actions/setup-node@v4
+        if: startsWith(matrix.target, 'wasm')
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: maxim-lobanov/setup-xcode@v1
+        if: runner.os == 'macOS'
+        with:
+          xcode-version: ${{ env.XCODE_VERSION }}
+      - uses: Jimver/cuda-toolkit@v0.2.15
+        if: matrix.cuda && runner.os != 'macOS'
+        with:
+          cuda: '12.2.2'
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.43
+      - name: Run builder
+        run:
+          deno run -A src/build.ts -v ${{ inputs.onnxruntime-version }} -c
