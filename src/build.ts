@@ -8,8 +8,8 @@ import $ from '@david/dax';
 
 const TRT_LINUX_PKG = 'https://developer.nvidia.com/downloads/compute/machine-learning/tensorrt/10.0.1/tars/TensorRT-10.0.1.6.Linux.x86_64-gnu.cuda-12.4.tar.gz';
 const TRT_WINDOWS_PKG = 'https://developer.nvidia.com/downloads/compute/machine-learning/tensorrt/10.0.1/zip/TensorRT-10.0.1.6.Windows10.win10.cuda-12.4.zip';
-const CUDNN_LINUX_PKG = 'https://developer.nvidia.com/downloads/compute/cudnn/secure/8.9.7/local_installers/12.x/cudnn-linux-x86_64-8.9.7.29_cuda12-archive.tar.xz/';
-const CUDNN_WINDOWS_PKG = 'https://developer.nvidia.com/downloads/compute/cudnn/secure/8.9.7/local_installers/12.x/cudnn-windows-x86_64-8.9.7.29_cuda12-archive.zip/';
+const CUDNN_LINUX_PKG = 'https://developer.nvidia.com/downloads/compute/cudnn/secure/8.9.7/local_installers/12.x/cudnn-linux-x86_64-8.9.7.29_cuda12-archive.tar.xz';
+const CUDNN_WINDOWS_PKG = 'https://developer.nvidia.com/downloads/compute/cudnn/secure/8.9.7/local_installers/12.x/cudnn-windows-x86_64-8.9.7.29_cuda12-archive.zip';
 
 await new Command()
 	.name('ort-artifact')
@@ -36,7 +36,7 @@ await new Command()
 				case 'linux': {
 					const cudnnArchiveStream = await fetch(CUDNN_LINUX_PKG).then(c => c.body!);
 					const cudnnOutPath = join(root, 'cudnn');
-					await $`tar xzf - -C ${cudnnOutPath}`.stdin(cudnnArchiveStream);
+					await $`tar xjf - -C ${cudnnOutPath}`.stdin(cudnnArchiveStream);
 					args.push(`-Donnxruntime_CUDNN_HOME=${cudnnOutPath}`);
 					
 					const trtArchiveStream = await fetch(TRT_LINUX_PKG).then(c => c.body!);
