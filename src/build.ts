@@ -36,7 +36,7 @@ await new Command()
 				case 'linux': {
 					const cudnnArchiveStream = await fetch(CUDNN_LINUX_PKG).then(c => c.body!);
 					const cudnnOutPath = join(root, 'cudnn');
-					await $`tar xjf - -C ${cudnnOutPath}`.stdin(cudnnArchiveStream);
+					await $`tar xJf - -C ${cudnnOutPath}`.stdin(cudnnArchiveStream);
 					args.push(`-Donnxruntime_CUDNN_HOME=${cudnnOutPath}`);
 					
 					const trtArchiveStream = await fetch(TRT_LINUX_PKG).then(c => c.body!);
