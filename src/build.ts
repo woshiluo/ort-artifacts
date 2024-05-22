@@ -24,6 +24,7 @@ await new Command()
 		const args = [];
 		if (options.cuda) {
 			args.push('-Donnxruntime_USE_CUDA=ON');
+			args.push('-Donnxruntime_NVCC_THREADS=1');
 			switch (platform()) {
 				case 'linux': {
 					const cudnnArchiveStream = await fetch(Deno.env.get('CUDNN_URL')!).then(c => c.body!);
