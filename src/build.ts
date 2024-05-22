@@ -12,6 +12,7 @@ await new Command()
 	.option('-v, --upstream-version <version:string>', 'Exact version of upstream package', { required: true })
 	.option('-c, --cuda', 'Enable CUDA EP')
 	.option('-t, --training', 'Enable Training API')
+	.option('-s, --static', 'Build static library')
 	.action(async (options, ..._) => {
 		const root = Deno.cwd();
 
@@ -25,6 +26,8 @@ await new Command()
 		const args = [];
 		if (options.cuda) {
 			args.push('-Donnxruntime_USE_CUDA=ON');
+			args.push('-Donnxruntime_USE_TENSORRT=ON');
+			// https://github.com/microsoft/onnxruntime/pull/20768
 			args.push('-Donnxruntime_NVCC_THREADS=1');
 			switch (platform()) {
 				case 'linux': {
@@ -66,7 +69,9 @@ await new Command()
 			args.push('-Donnxruntime_ENABLE_LAZY_TENSOR=OFF');
 		}
 
-		await $`cmake -S cmake -B build -D CMAKE_BUILD_TYPE=Release -DCMAKE_CONFIGURATION_TYPES=Release -DCMAKE_INSTALL_PREFIX=${join(root, 'output')} -DONNXRUNTIME_SOURCE_DIR=${join(onnxruntimeRoot, 'cmake')} --compile-no-warning-as-error ${args}`;
+		const sourceDir = options.static ? join(root, 'src', 'static-build') : 'cmake';
+
+		await $`cmake -S ${sourceDir} -B build -D CMAKE_BUILD_TYPE=Release -DCMAKE_CONFIGURATION_TYPES=Release -DCMAKE_INSTALL_PREFIX=${join(root, 'output')} -DONNXRUNTIME_SOURCE_DIR=${join(onnxruntimeRoot, 'cmake')} --compile-no-warning-as-error ${args}`;
 		await $`cmake --build build --config Release --parallel ${cpus().length}`;
 		await $`cmake --install build --config Release`;
 	})
