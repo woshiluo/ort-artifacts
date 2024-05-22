@@ -28,12 +28,12 @@ await new Command()
 				default: {
 					const cudnnArchiveStream = await fetch(Deno.env.get('CUDNN_URL')!);
 					const cudnnOutPath = join(root, 'cudnn');
-					await $`tar xvf - -C ${cudnnOutPath}`.stdin(cudnnArchiveStream.body!);
+					await $`tar xvJf - -C ${cudnnOutPath}`.stdin(cudnnArchiveStream.body!);
 					args.push(`-Donnxruntime_CUDNN_HOME=${cudnnOutPath}`);
 					
 					const trtArchiveStream = await fetch(Deno.env.get('TENSORRT_URL')!).then(c => c.body!);
 					const trtOutPath = join(root, 'tensorrt');
-					await $`tar xvf - -C ${trtOutPath}`.stdin(trtArchiveStream);
+					await $`tar xzvf - -C ${trtOutPath}`.stdin(trtArchiveStream);
 					args.push(`-Donnxruntime_TENSORRT_HOME=${trtOutPath}`);
 
 					break;
