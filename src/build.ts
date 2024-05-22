@@ -63,6 +63,7 @@ await new Command()
 
 		if (options.training) {
 			args.push('-Donnxruntime_ENABLE_TRAINING=ON');
+			args.push('-Donnxruntime_ENABLE_LAZY_TENSOR=OFF');
 		}
 
 		await $`cmake -S cmake -B build -D CMAKE_BUILD_TYPE=Release -DCMAKE_CONFIGURATION_TYPES=Release -DCMAKE_INSTALL_PREFIX=${join(root, 'output')} -DONNXRUNTIME_SOURCE_DIR=${join(onnxruntimeRoot, 'cmake')} --compile-no-warning-as-error ${args}`;
