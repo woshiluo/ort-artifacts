@@ -1,4 +1,4 @@
-import { exists,  } from 'https://deno.land/std@0.224.0/fs/mod.ts';
+import { exists } from 'https://deno.land/std@0.224.0/fs/mod.ts';
 import { join } from 'https://deno.land/std@0.224.0/path/mod.ts';
 
 import { cpus, platform } from 'node:os'; // is there really no deno-native function for this?
@@ -25,15 +25,17 @@ await new Command()
 		if (options.cuda) {
 			args.push('-Donnxruntime_USE_CUDA=ON');
 			switch (platform()) {
-				default: {
-					const cudnnArchiveStream = await fetch(Deno.env.get('CUDNN_URL')!);
+				case 'linux': {
+					const cudnnArchiveStream = await fetch(Deno.env.get('CUDNN_URL')!).then(c => c.body!);
 					const cudnnOutPath = join(root, 'cudnn');
-					await $`tar xvJf - -C ${cudnnOutPath}`.stdin(cudnnArchiveStream.body!);
+					await Deno.mkdir(cudnnOutPath);
+					await $`tar xvJC ${cudnnOutPath} --strip-components=1 -f -`.stdin(cudnnArchiveStream);
 					args.push(`-Donnxruntime_CUDNN_HOME=${cudnnOutPath}`);
 					
 					const trtArchiveStream = await fetch(Deno.env.get('TENSORRT_URL')!).then(c => c.body!);
 					const trtOutPath = join(root, 'tensorrt');
-					await $`tar xzvf - -C ${trtOutPath}`.stdin(trtArchiveStream);
+					await Deno.mkdir(trtOutPath);
+					await $`tar xvzC ${trtOutPath} --strip-components=1 -f -`.stdin(trtArchiveStream);
 					args.push(`-Donnxruntime_TENSORRT_HOME=${trtOutPath}`);
 
 					break;
