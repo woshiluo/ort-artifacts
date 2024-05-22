@@ -11,6 +11,7 @@ await new Command()
 	.version('0.1.0')
 	.option('-v, --upstream-version <version:string>', 'Exact version of upstream package', { required: true })
 	.option('-c, --cuda', 'Enable CUDA EP')
+	.option('-t, --training', 'Enable Training API')
 	.action(async (options, ..._) => {
 		const root = Deno.cwd();
 
@@ -41,7 +42,27 @@ await new Command()
 
 					break;
 				}
+				case 'windows': {
+					// windows should ship with bsdtar which supports extracting .zips
+					const cudnnArchiveStream = await fetch(Deno.env.get('CUDNN_URL')!).then(c => c.body!);
+					const cudnnOutPath = join(root, 'cudnn');
+					await Deno.mkdir(cudnnOutPath);
+					await $`tar xvC ${cudnnOutPath} --strip-components=1 -f -`.stdin(cudnnArchiveStream);
+					args.push(`-Donnxruntime_CUDNN_HOME=${cudnnOutPath}`);
+					
+					const trtArchiveStream = await fetch(Deno.env.get('TENSORRT_URL')!).then(c => c.body!);
+					const trtOutPath = join(root, 'tensorrt');
+					await Deno.mkdir(trtOutPath);
+					await $`tar xvC ${trtOutPath} --strip-components=1 -f -`.stdin(trtArchiveStream);
+					args.push(`-Donnxruntime_TENSORRT_HOME=${trtOutPath}`);
+
+					break;
+				}
 			}
+		}
+
+		if (options.training) {
+			args.push('-Donnxruntime_ENABLE_TRAINING=ON');
 		}
 
 		await $`cmake -S cmake -B build -D CMAKE_BUILD_TYPE=Release -DCMAKE_CONFIGURATION_TYPES=Release -DCMAKE_INSTALL_PREFIX=${join(root, 'output')} -DONNXRUNTIME_SOURCE_DIR=${join(onnxruntimeRoot, 'cmake')} --compile-no-warning-as-error ${args}`;

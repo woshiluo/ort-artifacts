@@ -22,20 +22,34 @@ jobs:
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
-            cuda: true
+            args: "-c -t"
+            static: false
+            feature-set: train,cu12
+            cuda-version: '12.3.0'
             runs-on: ubuntu-22.04
+          - target: x86_64-pc-windows-msvc
+            args: "-c -t"
+            static: false
+            feature-set: train,cu12
+            cuda-version: '12.3.0'
+            runs-on: windows-2022
+          - target: x86_64-pc-windows-msvc
+            args: "-t"
+            static: true
+            feature-set: train
+            runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
       - uses: Jimver/cuda-toolkit@v0.2.15
-        if: matrix.cuda && runner.os != 'macOS'
+        if: matrix.cuda-version && runner.os != 'macOS'
         with:
-          cuda: '12.3.0'
+          cuda: ${{ matrix.cuda-version }}
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.43
       - name: Run builder
         run:
-          deno run -A src/build.ts -v ${{ inputs.onnxruntime-version }} -c
+          deno run -A src/build.ts -v ${{ inputs.onnxruntime-version }} ${{ matrix.args }}
         env:
-          CUDNN_URL: ${{ secrets.CUDNN8_9_CUDA12_LINUX_URL }}
-          TENSORRT_URL: ${{ secrets.TENSORRT10_0_CUDA12_LINUX_URL }}
+          CUDNN_URL: ${{ matrix.cuda-version && (startsWith(matrix.cuda-version, '12') && (runner.os == 'Linux' && secrets.CUDNN8_9_CUDA12_LINUX_URL || secrets.CUDNN8_9_CUDA12_WINDOWS_URL) || (runner.os == 'Linux' && secrets.CUDNN8_9_CUDA11_LINUX_URL || secrets.CUDNN8_9_CUDA11_WINDOWS_URL)) }}
+          TENSORRT_URL: ${{ matrix.cuda-version && (startsWith(matrix.cuda-version, '12') && (runner.os == 'Linux' && secrets.TENSORRT10_0_CUDA12_LINUX_URL || secrets.TENSORRT10_0_CUDA12_WINDOWS_URL) || (runner.os == 'Linux' && secrets.TENSORRT10_0_CUDA11_LINUX_URL || secrets.TENSORRT10_0_CUDA11_WINDOWS_URL)) }}
