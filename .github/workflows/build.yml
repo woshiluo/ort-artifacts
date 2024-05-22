@@ -36,3 +36,6 @@ jobs:
       - name: Run builder
         run:
           deno run -A src/build.ts -v ${{ inputs.onnxruntime-version }} -c
+        env:
+          CUDNN_URL: ${{ secrets.CUDNN8_9_CUDA12_LINUX_URL }}
+          TENSORRT_URL: ${{ secrets.TENSORRT10_0_CUDA12_LINUX_URL }}
