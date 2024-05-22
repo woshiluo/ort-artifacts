@@ -45,7 +45,7 @@ await new Command()
 
 					break;
 				}
-				case 'windows': {
+				case 'win32': {
 					// windows should ship with bsdtar which supports extracting .zips
 					const cudnnArchiveStream = await fetch(Deno.env.get('CUDNN_URL')!).then(c => c.body!);
 					const cudnnOutPath = join(root, 'cudnn');
@@ -71,7 +71,7 @@ await new Command()
 
 		const sourceDir = options.static ? join(root, 'src', 'static-build') : 'cmake';
 
-		await $`cmake -S ${sourceDir} -B build -D CMAKE_BUILD_TYPE=Release -DCMAKE_CONFIGURATION_TYPES=Release -DCMAKE_INSTALL_PREFIX=${join(root, 'output')} -DONNXRUNTIME_SOURCE_DIR=${join(onnxruntimeRoot, 'cmake')} --compile-no-warning-as-error ${args}`;
+		await $`cmake -S ${sourceDir} -B build -D CMAKE_BUILD_TYPE=Release -DCMAKE_CONFIGURATION_TYPES=Release -DCMAKE_INSTALL_PREFIX=${join(root, 'output')} -DONNXRUNTIME_SOURCE_DIR=${onnxruntimeRoot} --compile-no-warning-as-error ${args}`;
 		await $`cmake --build build --config Release --parallel ${cpus().length}`;
 		await $`cmake --install build --config Release`;
 	})
