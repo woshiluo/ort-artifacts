@@ -30,6 +30,7 @@ await new Command()
 			args.push('-Donnxruntime_USE_TENSORRT_BUILTIN_PARSER=ON');
 			// https://github.com/microsoft/onnxruntime/pull/20768
 			args.push('-Donnxruntime_NVCC_THREADS=1');
+
 			switch (platform()) {
 				case 'linux': {
 					const cudnnArchiveStream = await fetch(Deno.env.get('CUDNN_URL')!).then(c => c.body!);
@@ -69,6 +70,12 @@ await new Command()
 			args.push('-Donnxruntime_ENABLE_TRAINING=ON');
 			args.push('-Donnxruntime_ENABLE_LAZY_TENSOR=OFF');
 			args.push('-Donnxruntime_DISABLE_RTTI=OFF');
+		}
+
+		if (platform() === 'win32') {
+			args.push('-DONNX_USE_MSVC_STATIC_RUNTIME=OFF');
+			args.push('-Dprotobuf_MSVC_STATIC_RUNTIME=OFF');
+			args.push('-Dgtest_force_shared_crt=OFF');
 		}
 
 		const sourceDir = options.static ? join(root, 'src', 'static-build') : 'cmake';
