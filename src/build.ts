@@ -68,6 +68,7 @@ await new Command()
 		if (options.training) {
 			args.push('-Donnxruntime_ENABLE_TRAINING=ON');
 			args.push('-Donnxruntime_ENABLE_LAZY_TENSOR=OFF');
+			args.push('-Donnxruntime_DISABLE_RTTI=OFF');
 		}
 
 		const sourceDir = options.static ? join(root, 'src', 'static-build') : 'cmake';
