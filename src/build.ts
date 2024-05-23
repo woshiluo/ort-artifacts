@@ -27,6 +27,7 @@ await new Command()
 		if (options.cuda) {
 			args.push('-Donnxruntime_USE_CUDA=ON');
 			args.push('-Donnxruntime_USE_TENSORRT=ON');
+			args.push('-Donnxruntime_USE_TENSORRT_BUILTIN_PARSER=ON');
 			// https://github.com/microsoft/onnxruntime/pull/20768
 			args.push('-Donnxruntime_NVCC_THREADS=1');
 			switch (platform()) {
