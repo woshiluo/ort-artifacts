@@ -23,6 +23,7 @@ await new Command()
 	.option('--directml', 'Enable DirectML EP')
 	.option('--coreml', 'Enable CoreML EP')
 	.option('--xnnpack', 'Enable XNNPACK EP')
+	.option('--rocm', 'Enable ROCm EP')
 	.option('-A, --arch <arch:target-arch>', 'Configure target architecture for cross-compile', { default: 'x86_64' })
 	.option('-W, --wasm', 'Compile for WebAssembly (with patches)')
 	.action(async (options, ..._) => {
@@ -89,6 +90,10 @@ await new Command()
 		}
 		if (platform === 'darwin' && options.coreml) {
 			args.push('-Donnxruntime_USE_COREML=ON');
+		}
+		if (platform === 'linux' && options.rocm) {
+			args.push('-Donnxruntime_USE_ROCM=ON');
+			args.push('-Donnxruntime_ROCM_HOME=/opt/rocm');
 		}
 		if (options.xnnpack) {
 			args.push('-Donnxruntime_USE_XNNPACK=ON');
@@ -165,7 +170,7 @@ await new Command()
 			await copyLib(staticLibName('onnxruntime'));
 		} else {
 			await copyLib(dynamicLibName('onnxruntime'));
-			if (options.cuda || options.trt) {
+			if (options.cuda || options.trt || options.rocm) {
 				await copyLib(dynamicLibName('onnxruntime_providers_shared'));
 			}
 
@@ -174,6 +179,9 @@ await new Command()
 			}
 			if (options.trt) {
 				await copyLib(dynamicLibName('onnxruntime_providers_tensorrt'));
+			}
+			if (options.rocm) {
+				await copyLib(dynamicLibName('onnxruntime_providers_rocm'));
 			}
 		}
 	})
