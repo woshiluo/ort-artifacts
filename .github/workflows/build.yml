@@ -39,6 +39,14 @@ jobs:
             feature-set: train
             runs-on: windows-2022
     steps:
+      - uses: easimon/maximize-build-space@v10
+        if: runner.os == 'Linux'
+        with:
+          root-reserve-mb: 5000
+          remove-haskell: true
+          remove-android: true
+          remove-codeql: true
+          remove-docker-images: true
       - uses: actions/checkout@v4
       - uses: Jimver/cuda-toolkit@v0.2.15
         if: matrix.cuda-version && runner.os != 'macOS'
