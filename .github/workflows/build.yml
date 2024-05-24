@@ -39,14 +39,13 @@ jobs:
             feature-set: train
             runs-on: windows-2022
     steps:
-      - uses: easimon/maximize-build-space@v10
+      - name: Remove unnecessary software
         if: runner.os == 'Linux'
-        with:
-          root-reserve-mb: 8000
-          remove-haskell: true
-          remove-android: true
-          remove-codeql: true
-          remove-docker-images: true
+        run: |
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
       - uses: actions/checkout@v4
       - uses: Jimver/cuda-toolkit@v0.2.15
         if: matrix.cuda-version && runner.os != 'macOS'
