@@ -72,7 +72,7 @@ await new Command()
 			args.push('-Donnxruntime_DISABLE_RTTI=OFF');
 		}
 
-		if (platform() === 'win32') {
+		if (platform() === 'win32' && !options.static) {
 			args.push('-DONNX_USE_MSVC_STATIC_RUNTIME=OFF');
 			args.push('-Dprotobuf_MSVC_STATIC_RUNTIME=OFF');
 			args.push('-Dgtest_force_shared_crt=OFF');
