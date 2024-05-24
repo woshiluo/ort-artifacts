@@ -78,6 +78,8 @@ await new Command()
 			args.push('-Dgtest_force_shared_crt=OFF');
 		}
 
+		args.push('-Donnxruntime_BUILD_UNIT_TESTS=OFF');
+		
 		const sourceDir = options.static ? join(root, 'src', 'static-build') : 'cmake';
 
 		await $`cmake -S ${sourceDir} -B build -D CMAKE_BUILD_TYPE=Release -DCMAKE_CONFIGURATION_TYPES=Release -DCMAKE_INSTALL_PREFIX=${join(root, 'output')} -DONNXRUNTIME_SOURCE_DIR=${onnxruntimeRoot} --compile-no-warning-as-error ${args}`;
