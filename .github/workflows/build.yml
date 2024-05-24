@@ -39,28 +39,28 @@ jobs:
             rocm: true
             runs-on: ubuntu-22.04
           - target: aarch64-apple-darwin
-            args: "-t -A aarch64"
+            args: "-t --coreml -A aarch64"
             static: true
             feature-set: train
             runs-on: macos-14
           - target: x86_64-apple-darwin
-            args: "-t"
+            args: "-t --coreml"
             static: true
             feature-set: train
             runs-on: macos-14
           - target: x86_64-pc-windows-msvc
-            args: "-t --cuda --trt"
+            args: "-t --directml --cuda --trt"
             static: false
             feature-set: train,cu12
             cuda-version: '12.2.2'
             runs-on: windows-2022
           - target: aarch64-pc-windows-msvc
-            args: "-t"
+            args: "-t --directml"
             static: true
             feature-set: train
             runs-on: windows-2022
           - target: x86_64-pc-windows-msvc
-            args: "-t"
+            args: "-t --directml"
             static: true
             feature-set: train
             runs-on: windows-2022
