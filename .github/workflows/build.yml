@@ -42,7 +42,7 @@ jobs:
       - uses: easimon/maximize-build-space@v10
         if: runner.os == 'Linux'
         with:
-          root-reserve-mb: 5000
+          root-reserve-mb: 8000
           remove-haskell: true
           remove-android: true
           remove-codeql: true
