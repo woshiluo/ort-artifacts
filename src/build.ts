@@ -123,6 +123,9 @@ await new Command()
 		if (options.training) {
 			args.push('-Donnxruntime_ENABLE_TRAINING=ON');
 			args.push('-Donnxruntime_ENABLE_LAZY_TENSOR=OFF');
+		}
+
+		if (options.training || options.rocm) {
 			args.push('-Donnxruntime_DISABLE_RTTI=OFF');
 		}
 
