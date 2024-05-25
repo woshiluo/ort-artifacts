@@ -50,7 +50,7 @@ await new Command()
 			}
 
 			// there's no WAY im gonna try to wrestle with CMake on this one
-			await $`./build.bat --build_wasm_static_lib --disable_rtti --disable_exceptions --disable_wasm_exception_catching --skip_tests --config Release --parallel --minimal_build`;
+			await $`bash ./build.sh --build_wasm_static_lib --disable_rtti --disable_exceptions --disable_wasm_exception_catching --skip_tests --config Release --parallel --minimal_build`;
 
 			const buildRoot = join(onnxruntimeRoot, 'build', 'Linux', 'Release');
 			let originalArDesc = await Deno.readTextFile(join(buildRoot, 'onnxruntime_webassembly.ar')).then(c => c.trim().split('\n'));
