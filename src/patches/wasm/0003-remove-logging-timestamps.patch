@@ -1,0 +1,256 @@
+From 0000000000000000000000000000000000000000 Mon Dec 21 00:00:00 2000
+Date: Mon, 21 Dec 2000 00:00:00 -0600
+Subject: Remove the ability for loggers to log timestamps.
+
+diff --git a/include/onnxruntime/core/common/logging/isink.h b/include/onnxruntime/core/common/logging/isink.h
+index a67777d..1a21e20 100644
+--- a/include/onnxruntime/core/common/logging/isink.h
++++ b/include/onnxruntime/core/common/logging/isink.h
+@@ -15,12 +15,11 @@ class ISink {
+ 
+   /**
+      Sends the message to the sink.
+-     @param timestamp The timestamp.
+      @param logger_id The logger identifier.
+      @param message The captured message.
+   */
+-  void Send(const Timestamp& timestamp, const std::string& logger_id, const Capture& message) {
+-    SendImpl(timestamp, logger_id, message);
++  void Send(const std::string& logger_id, const Capture& message) {
++    SendImpl(logger_id, message);
+   }
+ 
+   /**
+@@ -35,7 +34,7 @@ class ISink {
+   // Make Code Analysis happy by disabling all for now. Enable as needed.
+   ORT_DISALLOW_COPY_ASSIGNMENT_AND_MOVE(ISink);
+ 
+-  virtual void SendImpl(const Timestamp& timestamp, const std::string& logger_id, const Capture& message) = 0;
++  virtual void SendImpl(const std::string& logger_id, const Capture& message) = 0;
+ };
+ }  // namespace logging
+ }  // namespace onnxruntime
+diff --git a/include/onnxruntime/core/common/logging/logging.h b/include/onnxruntime/core/common/logging/logging.h
+index f62053a..e488672 100644
+--- a/include/onnxruntime/core/common/logging/logging.h
++++ b/include/onnxruntime/core/common/logging/logging.h
+@@ -210,7 +210,6 @@ class LoggingManager final {
+  private:
+   ORT_DISALLOW_COPY_ASSIGNMENT_AND_MOVE(LoggingManager);
+ 
+-  Timestamp GetTimestamp() const noexcept;
+   void CreateDefaultLogger(const std::string& logger_id);
+ 
+   std::unique_ptr<ISink> sink_;
+@@ -220,14 +219,6 @@ class LoggingManager final {
+   bool owns_default_logger_;
+ 
+   static Logger* s_default_logger_;
+-
+-  struct Epochs {
+-    const std::chrono::time_point<std::chrono::high_resolution_clock> high_res;
+-    const std::chrono::time_point<std::chrono::system_clock> system;
+-    const std::chrono::minutes localtime_offset_from_utc;
+-  };
+-
+-  static const Epochs& GetEpochs() noexcept;
+ };
+ 
+ /**
+@@ -341,14 +332,6 @@ inline void LoggingManager::SetDefaultLoggerVerbosity(int vlog_level) {
+   s_default_logger_->SetVerbosity(vlog_level);
+ }
+ 
+-inline Timestamp LoggingManager::GetTimestamp() const noexcept {
+-  static const Epochs& epochs = GetEpochs();
+-
+-  const auto high_res_now = std::chrono::high_resolution_clock::now();
+-  return std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+-      epochs.system + (high_res_now - epochs.high_res) + epochs.localtime_offset_from_utc);
+-}
+-
+ /**
+    Return the current thread id.
+ */
+diff --git a/onnxruntime/core/common/logging/logging.cc b/onnxruntime/core/common/logging/logging.cc
+index eac9a7f..ec3ac0c 100644
+--- a/onnxruntime/core/common/logging/logging.cc
++++ b/onnxruntime/core/common/logging/logging.cc
+@@ -71,18 +71,6 @@ Logger* LoggingManager::s_default_logger_ = nullptr;
+ #pragma warning(pop)
+ #endif
+ 
+-static minutes InitLocaltimeOffset(const time_point<system_clock>& epoch) noexcept;
+-
+-const LoggingManager::Epochs& LoggingManager::GetEpochs() noexcept {
+-  // we save the value from system clock (which we can convert to a timestamp) as well as the high_resolution_clock.
+-  // from then on, we use the delta from the high_resolution_clock and apply that to the
+-  // system clock value.
+-  static Epochs epochs{high_resolution_clock::now(),
+-                       system_clock::now(),
+-                       InitLocaltimeOffset(system_clock::now())};
+-  return epochs;
+-}
+-
+ LoggingManager::LoggingManager(std::unique_ptr<ISink> sink, Severity default_min_severity, bool filter_user_data,
+                                const InstanceType instance_type, const std::string* default_logger_id,
+                                int default_max_vlog_level)
+@@ -156,42 +144,13 @@ std::unique_ptr<Logger> LoggingManager::CreateLogger(const std::string& logger_i
+ }
+ 
+ void LoggingManager::Log(const std::string& logger_id, const Capture& message) const {
+-  sink_->Send(GetTimestamp(), logger_id, message);
++  sink_->Send(logger_id, message);
+ }
+ 
+ void LoggingManager::SendProfileEvent(profiling::EventRecord& eventRecord) const {
+   sink_->SendProfileEvent(eventRecord);
+ }
+ 
+-static minutes InitLocaltimeOffset(const time_point<system_clock>& epoch) noexcept {
+-  // convert the system_clock time_point (UTC) to localtime and gmtime to calculate the difference.
+-  // we do this once, and apply that difference in GetTimestamp().
+-  // NOTE: If we happened to be running over a period where the time changed (e.g. daylight saving started)
+-  // we won't pickup the change. Not worth the extra cost to be 100% accurate 100% of the time.
+-
+-  const time_t system_time_t = system_clock::to_time_t(epoch);
+-  tm local_tm;
+-  tm utc_tm;
+-
+-#ifdef _WIN32
+-  localtime_s(&local_tm, &system_time_t);
+-  gmtime_s(&utc_tm, &system_time_t);
+-#else
+-  localtime_r(&system_time_t, &local_tm);
+-  gmtime_r(&system_time_t, &utc_tm);
+-#endif
+-
+-  // Note: mktime() expects a local time and utc_tm is not a local time.
+-  // However, we treat utc_tm as a local time in order to compute the local time offset.
+-  // To avoid DST inconsistency, set utc_tm's tm_isdst to match that of actual local time local_tm.
+-  utc_tm.tm_isdst = local_tm.tm_isdst;
+-
+-  const double seconds = difftime(mktime(&local_tm), mktime(&utc_tm));
+-
+-  // minutes should be accurate enough for timezone conversion
+-  return minutes{static_cast<int64_t>(seconds / 60)};
+-}
+-
+ std::exception LoggingManager::LogFatalAndCreateException(const char* category,
+                                                           const CodeLocation& location,
+                                                           const char* format_str, ...) {
+diff --git a/onnxruntime/core/common/logging/sinks/composite_sink.h b/onnxruntime/core/common/logging/sinks/composite_sink.h
+index 9d18eb5..5c9f680 100644
+--- a/onnxruntime/core/common/logging/sinks/composite_sink.h
++++ b/onnxruntime/core/common/logging/sinks/composite_sink.h
+@@ -45,10 +45,10 @@ class CompositeSink : public ISink {
+   }
+ 
+  private:
+-  void SendImpl(const Timestamp& timestamp, const std::string& logger_id, const Capture& message) override {
++  void SendImpl(const std::string& logger_id, const Capture& message) override {
+     for (auto& sink_pair : sinks_with_severity_) {
+       if (message.Severity() >= sink_pair.second) {
+-        sink_pair.first->Send(timestamp, logger_id, message);
++        sink_pair.first->Send(logger_id, message);
+       }
+     }
+   }
+diff --git a/onnxruntime/core/common/logging/sinks/file_sink.h b/onnxruntime/core/common/logging/sinks/file_sink.h
+index ba3ff3e..deb5993 100644
+--- a/onnxruntime/core/common/logging/sinks/file_sink.h
++++ b/onnxruntime/core/common/logging/sinks/file_sink.h
+@@ -38,9 +38,9 @@ class FileSink : public OStreamSink {
+   }
+ 
+  private:
+-  void SendImpl(const Timestamp& timestamp, const std::string& logger_id, const Capture& message) override {
++  void SendImpl(const std::string& logger_id, const Capture& message) override {
+     if (!filter_user_data_ || message.DataType() != DataType::USER) {
+-      OStreamSink::SendImpl(timestamp, logger_id, message);
++      OStreamSink::SendImpl(logger_id, message);
+     }
+   }
+ 
+diff --git a/onnxruntime/core/common/logging/sinks/ostream_sink.cc b/onnxruntime/core/common/logging/sinks/ostream_sink.cc
+index a120138..3c59cd1 100644
+--- a/onnxruntime/core/common/logging/sinks/ostream_sink.cc
++++ b/onnxruntime/core/common/logging/sinks/ostream_sink.cc
+@@ -21,10 +21,7 @@ struct Color {
+ };
+ #endif
+ 
+-void OStreamSink::SendImpl(const Timestamp& timestamp, const std::string& logger_id, const Capture& message) {
+-  // operator for formatting of timestamp in ISO8601 format including microseconds
+-  using timestamp_ns::operator<<;
+-
++void OStreamSink::SendImpl(const std::string& logger_id, const Capture& message) {
+   // Two options as there may be multiple calls attempting to write to the same sink at once:
+   // 1) Use mutex to synchronize access to the stream.
+   // 2) Create the message in an ostringstream and output in one call.
+@@ -44,7 +41,7 @@ void OStreamSink::SendImpl(const Timestamp& timestamp, const std::string& logger
+   }
+ #endif
+ 
+-  msg << timestamp << " [" << message.SeverityPrefix() << ":" << message.Category() << ":" << logger_id << ", "
++  msg << "[" << message.SeverityPrefix() << ":" << message.Category() << ":" << logger_id << ", "
+       << message.Location().ToString() << "] " << message.Message();
+ 
+ #ifndef ORT_MINIMAL_BUILD
+@@ -63,10 +60,7 @@ void OStreamSink::SendImpl(const Timestamp& timestamp, const std::string& logger
+   }
+ }
+ #ifdef _WIN32
+-void WOStreamSink::SendImpl(const Timestamp& timestamp, const std::string& logger_id, const Capture& message) {
+-  // operator for formatting of timestamp in ISO8601 format including microseconds
+-  using date::operator<<;
+-
++void WOStreamSink::SendImpl(const std::string& logger_id, const Capture& message) {
+   // Two options as there may be multiple calls attempting to write to the same sink at once:
+   // 1) Use mutex to synchronize access to the stream.
+   // 2) Create the message in an ostringstream and output in one call.
+@@ -86,7 +80,7 @@ void WOStreamSink::SendImpl(const Timestamp& timestamp, const std::string& logge
+   }
+ #endif
+ 
+-  msg << timestamp << L" [" << message.SeverityPrefix() << L":" << message.Category() << L":" << ToWideString(logger_id) << L", "
++  msg << L"[" << message.SeverityPrefix() << L":" << message.Category() << L":" << ToWideString(logger_id) << L", "
+       << ToWideString(message.Location().ToString()) << L"] " << ToWideString(message.Message());
+ 
+ #ifndef ORT_MINIMAL_BUILD
+diff --git a/onnxruntime/core/common/logging/sinks/ostream_sink.h b/onnxruntime/core/common/logging/sinks/ostream_sink.h
+index 1d0d24b..e4a057f 100644
+--- a/onnxruntime/core/common/logging/sinks/ostream_sink.h
++++ b/onnxruntime/core/common/logging/sinks/ostream_sink.h
+@@ -23,7 +23,7 @@ class OStreamSink : public ISink {
+   }
+ 
+  public:
+-  void SendImpl(const Timestamp& timestamp, const std::string& logger_id, const Capture& message) override;
++  void SendImpl(const std::string& logger_id, const Capture& message) override;
+ 
+  private:
+   std::ostream* stream_;
+@@ -41,7 +41,7 @@ class WOStreamSink : public ISink {
+   }
+ 
+  public:
+-  void SendImpl(const Timestamp& timestamp, const std::string& logger_id, const Capture& message) override;
++  void SendImpl(const std::string& logger_id, const Capture& message) override;
+ 
+  private:
+   std::wostream* stream_;
+diff --git a/onnxruntime/core/session/user_logging_sink.h b/onnxruntime/core/session/user_logging_sink.h
+index 5a9ceb2..1a2a4fa 100644
+--- a/onnxruntime/core/session/user_logging_sink.h
++++ b/onnxruntime/core/session/user_logging_sink.h
+@@ -14,8 +14,7 @@ class UserLoggingSink : public onnxruntime::logging::ISink {
+       : logging_function_(logging_function), logger_param_(logger_param) {
+   }
+ 
+-  void SendImpl(const onnxruntime::logging::Timestamp& /*timestamp*/, const std::string& logger_id,
+-                const onnxruntime::logging::Capture& message) override {
++  void SendImpl(const std::string& logger_id, const onnxruntime::logging::Capture& message) override {
+     std::string s = message.Location().ToString();
+     logging_function_(logger_param_, static_cast<OrtLoggingLevel>(message.Severity()), message.Category(),
+                       logger_id.c_str(), s.c_str(), message.Message().c_str());

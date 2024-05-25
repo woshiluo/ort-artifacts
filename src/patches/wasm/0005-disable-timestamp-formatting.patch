@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Dec 21 00:00:00 2000
+Date: Mon, 21 Dec 2000 00:00:00 -0600
+Subject: Disable timestamp formatting in log messages.
+
+diff --git a/onnxruntime/core/session/inference_session.cc b/onnxruntime/core/session/inference_session.cc
+index c1cd215..501aa2d 100644
+--- a/onnxruntime/core/session/inference_session.cc
++++ b/onnxruntime/core/session/inference_session.cc
+@@ -96,10 +96,12 @@ namespace {
+ template <typename T>
+ const T* GetDateFormatString();
+ 
++#if !defined(__wasm__)
+ template <>
+ inline const char* GetDateFormatString<char>() {
+   return "%Y-%m-%d_%H-%M-%S";
+ }
++#endif
+ #ifdef _WIN32
+ template <>
+ inline const wchar_t* GetDateFormatString<wchar_t>() {
+@@ -111,6 +113,7 @@ inline const wchar_t* GetDateFormatString<wchar_t>() {
+ // to simplify this and match the log file timestamp format.
+ template <typename T>
+ inline std::basic_string<T> GetCurrentTimeString() {
++#if !defined(__wasm__)
+   auto now = std::chrono::system_clock::now();
+   auto in_time_t = std::chrono::system_clock::to_time_t(now);
+   std::tm local_tm;  // NOLINT
+@@ -124,6 +127,9 @@ inline std::basic_string<T> GetCurrentTimeString() {
+   T time_str[32];
+   OrtStrftime<T>(time_str, sizeof(time_str), GetDateFormatString<T>(), &local_tm);
+   return std::basic_string<T>(time_str);
++#else
++  return std::basic_string<T>(nullptr);
++#endif
+ }
+ 
+ #if !defined(ORT_MINIMAL_BUILD)

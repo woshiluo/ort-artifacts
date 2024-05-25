@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Dec 21 00:00:00 2000
+Date: Mon, 21 Dec 2000 00:00:00 -0600
+Subject: Strip functions that retrieve environment variables.
+
+diff --git a/onnxruntime/core/codegen/common/utils.cc b/onnxruntime/core/codegen/common/utils.cc
+index f4140a4..3ab742a 100644
+--- a/onnxruntime/core/codegen/common/utils.cc
++++ b/onnxruntime/core/codegen/common/utils.cc
+@@ -19,7 +19,7 @@ std::unique_ptr<char[]> GetEnv(const char* var) {
+     // Something went wrong, just return nullptr.
+     return nullptr;
+   }
+-#else
++#elif !defined(__wasm__)
+   val = getenv(var);
+ #endif  // _MSC_VER
+ 
+diff --git a/onnxruntime/core/platform/posix/env.cc b/onnxruntime/core/platform/posix/env.cc
+index 9999550..c891f43 100644
+--- a/onnxruntime/core/platform/posix/env.cc
++++ b/onnxruntime/core/platform/posix/env.cc
+@@ -565,8 +565,12 @@ class PosixEnv : public Env {
+ 
+   // \brief returns a value for the queried variable name (var_name)
+   std::string GetEnvironmentVar(const std::string& var_name) const override {
++#if !defined(__wasm__)
+     char* val = getenv(var_name.c_str());
+     return val == NULL ? std::string() : std::string(val);
++#else
++    return std::string();
++#endif
+   }
+ 
+  private:

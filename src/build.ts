@@ -36,6 +36,60 @@ await new Command()
 
 		$.cd(onnxruntimeRoot);
 
+		await $`git reset --hard HEAD`;
+		await $`git clean -fd`;
+		if (options.wasm) {
+			const patchDir = join(root, 'src', 'patches', 'wasm');
+			for await (const patchFile of Deno.readDir(patchDir)) {
+				if (!patchFile.isFile) {
+					continue;
+				}
+
+				await $`git apply ${join(patchDir, patchFile.name)} --ignore-whitespace --recount --verbose`;
+				console.log(`applied ${patchFile.name}`);
+			}
+
+			// there's no WAY im gonna try to wrestle with CMake on this one
+			await $`./build.bat --build_wasm_static_lib --disable_rtti --disable_exceptions --disable_wasm_exception_catching --skip_tests --config Release --parallel --minimal_build`;
+
+			const buildRoot = join(onnxruntimeRoot, 'build', 'Linux', 'Release');
+			let originalArDesc = await Deno.readTextFile(join(buildRoot, 'onnxruntime_webassembly.ar')).then(c => c.trim().split('\n'));
+			// slice off SAVE, END lines
+			originalArDesc = originalArDesc.slice(0, originalArDesc.length - 2);
+
+			const addArLine = async (path: string) => {
+				if (path.includes('+')) {
+					// ar, in its infinite wisdom, still lives in last century and can't handle such modern delicacies
+					// as a plus symbol in a pathname
+					const oldStylePath = path.replace(/\+/g, 'x');
+					await Deno.rename(path, oldStylePath);
+					path = oldStylePath;
+				}
+				originalArDesc.push(`ADDLIB ${path}`);
+			};
+
+			const emscriptenSysootLibs = join(onnxruntimeRoot, 'cmake', 'external', 'emsdk', 'upstream', 'emscripten', 'cache', 'sysroot', 'lib', 'wasm32-emscripten');
+			await addArLine(join(emscriptenSysootLibs, 'libc.a'));
+			await addArLine(join(emscriptenSysootLibs, 'libc++-noexcept.a'));
+			await addArLine(join(emscriptenSysootLibs, 'libc++abi-noexcept.a'));
+			await addArLine(join(emscriptenSysootLibs, 'libcompiler_rt.a'));
+			await addArLine(join(emscriptenSysootLibs, 'libstubs.a'));
+
+			originalArDesc.push('SAVE', 'END');
+
+			await $`ar -M`.stdinText(originalArDesc.join('\n'));
+
+			const artifactOutDir = join(root, 'artifact');
+			await Deno.mkdir(artifactOutDir);
+	
+			const artifactLibDir = join(artifactOutDir, 'onnxruntime', 'lib');
+			await Deno.mkdir(artifactLibDir, { recursive: true });
+
+			await Deno.copyFile(join(buildRoot, 'libonnxruntime_webassembly.a'), join(artifactLibDir, 'libonnxruntime.a'));
+
+			return;
+		}
+
 		const args = [];
 		if (options.cuda) {
 			args.push('-Donnxruntime_USE_CUDA=ON');
@@ -99,23 +153,25 @@ await new Command()
 			args.push('-Donnxruntime_USE_XNNPACK=ON');
 		}
 
-		if (platform === 'darwin') {
-			if (options.arch === 'aarch64') {
-				args.push('-DCMAKE_OSX_ARCHITECTURES=arm64');
+		if (!options.wasm) {
+			if (platform === 'darwin') {
+				if (options.arch === 'aarch64') {
+					args.push('-DCMAKE_OSX_ARCHITECTURES=arm64');
+				} else {
+					args.push('-DCMAKE_OSX_ARCHITECTURES=x86_64');
+				}
 			} else {
-				args.push('-DCMAKE_OSX_ARCHITECTURES=x86_64');
-			}
-		} else {
-			if (options.arch === 'aarch64' && arch !== 'arm64') {
-				args.push('-Donnxruntime_CROSS_COMPILING=ON');
-				switch (platform) {
-					case 'win32':
-						args.push('-A', 'ARM64');
-						args.push('-DCMAKE_CXX_FLAGS=-D_SILENCE_ALL_CXX23_DEPRECATION_WARNINGS');
-						break;
-					case 'linux':
-						args.push(`-DCMAKE_TOOLCHAIN_FILE=${join(root, 'toolchains', 'aarch64-unknown-linux-gnu.cmake')}`);
-						break;
+				if (options.arch === 'aarch64' && arch !== 'arm64') {
+					args.push('-Donnxruntime_CROSS_COMPILING=ON');
+					switch (platform) {
+						case 'win32':
+							args.push('-A', 'ARM64');
+							args.push('-DCMAKE_CXX_FLAGS=-D_SILENCE_ALL_CXX23_DEPRECATION_WARNINGS');
+							break;
+						case 'linux':
+							args.push(`-DCMAKE_TOOLCHAIN_FILE=${join(root, 'toolchains', 'aarch64-unknown-linux-gnu.cmake')}`);
+							break;
+					}
 				}
 			}
 		}

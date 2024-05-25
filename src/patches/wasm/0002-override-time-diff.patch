@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Dec 21 00:00:00 2000
+Date: Mon, 21 Dec 2000 00:00:00 -0600
+Subject: Override `TimeDiffMicroSeconds` to always return 0.
+
+diff --git a/include/onnxruntime/core/common/common.h b/include/onnxruntime/core/common/common.h
+index 0822eba..7e684d3 100644
+--- a/include/onnxruntime/core/common/common.h
++++ b/include/onnxruntime/core/common/common.h
+@@ -249,13 +249,12 @@ void LogRuntimeError(uint32_t session_id, const common::Status& status, const ch
+     }                                  \
+   } while (0)
+ 
+-inline long long TimeDiffMicroSeconds(TimePoint start_time) {
+-  auto end_time = std::chrono::high_resolution_clock::now();
+-  return std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
++inline long long TimeDiffMicroSeconds(TimePoint /*start_time*/) {
++  return 0;
+ }
+ 
+-inline long long TimeDiffMicroSeconds(TimePoint start_time, TimePoint end_time) {
+-  return std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
++inline long long TimeDiffMicroSeconds(TimePoint /*start_time*/, TimePoint /*end_time*/) {
++  return 0;
+ }
+ 
+ struct null_type {};

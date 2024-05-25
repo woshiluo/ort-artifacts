@@ -141,6 +141,11 @@ jobs:
             static: true
             feature-set: none
             runs-on: windows-2022
+          - target: wasm32-unknown-unknown
+            args: "-W --xnnpack"
+            static: true
+            feature-set: none
+            runs-on: ubuntu-22.04
     steps:
       - name: Install cross-compile tools
         if: matrix.target == 'aarch64-unknown-linux-gnu'

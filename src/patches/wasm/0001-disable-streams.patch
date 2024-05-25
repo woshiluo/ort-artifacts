@@ -1,0 +1,17 @@
+From 0000000000000000000000000000000000000000 Mon Dec 21 00:00:00 2000
+Date: Mon, 21 Dec 2000 00:00:00 -0600
+Subject: Disable stream for all WASM builds.
+
+diff --git a/cmake/adjust_global_compile_flags.cmake b/cmake/adjust_global_compile_flags.cmake
+index 690b6d4..aaa458f 100644
+--- a/cmake/adjust_global_compile_flags.cmake
++++ b/cmake/adjust_global_compile_flags.cmake
+@@ -102,7 +102,7 @@ if (onnxruntime_MINIMAL_BUILD)
+ endif()
+ 
+ # Enable stream for all the non-minimal build
+-if (NOT onnxruntime_MINIMAL_BUILD)
++if (NOT onnxruntime_MINIMAL_BUILD AND NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+   add_compile_definitions(ORT_ENABLE_STREAM)
+ endif()
+ 

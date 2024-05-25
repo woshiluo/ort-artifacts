@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Dec 21 00:00:00 2000
+Date: Mon, 21 Dec 2000 00:00:00 -0600
+Subject: Disable telemetry & profiling calls that trigger timestamp formatting.
+
+diff --git a/onnxruntime/core/session/inference_session.cc b/onnxruntime/core/session/inference_session.cc
+index c1cd215..f6971c3 100644
+--- a/onnxruntime/core/session/inference_session.cc
++++ b/onnxruntime/core/session/inference_session.cc
+@@ -2569,6 +2569,7 @@ Status InferenceSession::Run(const RunOptions& run_options,
+     }
+   }
+ 
++#if !defined(__wasm__)
+   // keep track of telemetry
+   ++telemetry_.total_runs_since_last_;
+   telemetry_.total_run_duration_since_last_ += TimeDiffMicroSeconds(tp);
+@@ -2593,6 +2594,7 @@ Status InferenceSession::Run(const RunOptions& run_options,
+   }
+ #ifdef ONNXRUNTIME_ENABLE_INSTRUMENT
+   TraceLoggingWriteStop(ortrun_activity, "OrtRun");
++#endif
+ #endif
+ 
+   // As N+1 inference runs (N for memory allocation and 1 for graph capturing)
+@@ -2816,9 +2818,11 @@ common::Status InferenceSession::Run(IOBinding& io_binding) {
+ 
+ template <typename T>
+ void InferenceSession::StartProfiling(const std::basic_string<T>& file_prefix) {
++#if !defined(__wasm__)
+   std::basic_ostringstream<T> ss;
+   ss << file_prefix << "_" << GetCurrentTimeString<T>() << ".json";
+   session_profiler_.StartProfiling(ss.str());
++#endif
+ }
+ 
+ void InferenceSession::StartProfiling(const std::string& file_prefix) {
