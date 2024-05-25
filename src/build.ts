@@ -231,7 +231,8 @@ await new Command()
 			if (platform !== 'win32') {
 				await copyLib(dynamicLibName('onnxruntime'));
 			} else {
-				// on windows, libonnxruntime is in /bin/, for whatever reason
+				await copyLib(staticLibName('onnxruntime'));
+				// on windows, onnxruntime.dll is in /bin/, for whatever reason
 				await Deno.copyFile(join(outDir, 'bin', 'onnxruntime.dll'), join(artifactLibDir, 'onnxruntime.dll'));
 			}
 
@@ -239,6 +240,7 @@ await new Command()
 				if (platform !== 'win32') {
 					await copyLib(dynamicLibName('onnxruntime_providers_shared'));
 				} else {
+					await copyLib(staticLibName('onnxruntime_providers_shared'));
 					// ditto 🙃
 					await Deno.copyFile(
 						join(outDir, 'bin', 'onnxruntime_providers_shared.dll'),
