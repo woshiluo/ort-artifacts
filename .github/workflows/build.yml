@@ -154,7 +154,7 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache/CodeQL
           sudo docker image prune --all --force
       - uses: actions/checkout@v4
-      - uses: pykeio/cuda-toolkit@v0.2.16
+      - uses: pykeio/cuda-toolkit@v0.2.17
         if: matrix.cuda-version && runner.os != 'macOS'
         with:
           cuda: ${{ matrix.cuda-version }}
