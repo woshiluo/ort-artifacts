@@ -177,7 +177,15 @@ await new Command()
 			}
 
 			if (options.cuda || options.trt || options.rocm) {
-				await copyLib(dynamicLibName('onnxruntime_providers_shared'));
+				if (platform !== 'win32') {
+					await copyLib(dynamicLibName('onnxruntime_providers_shared'));
+				} else {
+					// ditto 🙃
+					await Deno.copyFile(
+						join(outDir, 'bin', 'onnxruntime_providers_shared.dll'),
+						join(artifactLibDir, 'onnxruntime_providers_shared.dll')
+					);
+				}
 			}
 
 			if (options.cuda) {
