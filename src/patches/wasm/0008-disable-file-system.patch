@@ -100,25 +100,25 @@ index b3935e6..b0d1077 100644
  
  common::Status Model::SaveToOrtFormat(flatbuffers::FlatBufferBuilder& builder,
 diff --git a/onnxruntime/core/platform/path_lib.h b/onnxruntime/core/platform/path_lib.h
-index a9d89f3..667f3f0 100644
+index a9d89f3..1dee6a1 100644
 --- a/onnxruntime/core/platform/path_lib.h
 +++ b/onnxruntime/core/platform/path_lib.h
-@@ -202,6 +202,7 @@ inline std::string FormatErrorCode(DWORD dw) {
- }
+@@ -320,6 +320,7 @@ inline OrtFileType DTToFileType(unsigned char t) {
+ 
  template <typename T>
- void LoopDir(const std::wstring& dir_name, T func) {
+ void LoopDir(const std::string& dir_name, T func) {
 +#if !defined(__wasm__)
-   std::wstring pattern = dir_name + L"\\*";
-   WIN32_FIND_DATAW ffd;
-   std::unique_ptr<void, decltype(&FindClose)> hFind(FindFirstFileW(pattern.c_str(), &ffd), FindClose);
-@@ -219,6 +220,7 @@ void LoopDir(const std::wstring& dir_name, T func) {
-     std::string s = FormatErrorCode(dw);
-     ORT_THROW(s);
+   DIR* dir = opendir(dir_name.c_str());
+   if (dir == nullptr) {
+     auto e = errno;
+@@ -351,6 +352,7 @@ void LoopDir(const std::string& dir_name, T func) {
+     ORT_RETHROW;
    }
+   closedir(dir);
 +#endif
  }
- 
- // TODO: rewrite it with PathFindNextComponentW
+ #endif
+ template <typename T>
 diff --git a/onnxruntime/core/platform/posix/env.cc b/onnxruntime/core/platform/posix/env.cc
 index 9999550..82026c9 100644
 --- a/onnxruntime/core/platform/posix/env.cc
