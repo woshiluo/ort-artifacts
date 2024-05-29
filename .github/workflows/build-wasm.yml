@@ -35,4 +35,4 @@ jobs:
         run: |
           git clone https://github.com/pykeio/ort && cd ort
           cd examples/webassembly
-          ORT_LIB_LOCATION=../../../artifact/onnxruntime/lib wasm-pack test --node
+          ORT_LIB_LOCATION=/home/runner/work/ort-artifacts-staging/ort-artifacts-staging/artifact/onnxruntime/lib wasm-pack test --node
