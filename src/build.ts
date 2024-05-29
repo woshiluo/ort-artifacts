@@ -50,7 +50,13 @@ await new Command()
 			}
 
 			// there's no WAY im gonna try to wrestle with CMake on this one
-			await $`bash ./build.sh --build_wasm_static_lib --disable_rtti --disable_exceptions --disable_wasm_exception_catching --skip_tests --config Release --parallel --minimal_build`;
+			await $`bash ./build.sh --build_wasm_static_lib --disable_rtti --disable_exceptions --disable_wasm_exception_catching --skip_tests --config Release --parallel --minimal_build --emsdk_version 3.1.51`;
+
+			// emsdk 3.1.57, the default for ONNX Runtime v1.18.0, has an issue with vtables. Virtual methods (like
+			// those defined in onnxruntime/core/platform/env.h) are not properly overridden (like in onnxruntime/core/
+			// platform/posix/env.cc). This manifests as a call to a NULL function pointer when creating an environment
+			// (as it attempts to call Env::GetTelemetryProvider, which defaults to a NULL pointer).
+			// TODO: bisect the change that broke & create a minimal repro for Emscripten team
 
 			const buildRoot = join(onnxruntimeRoot, 'build', 'Linux', 'Release');
 			let originalArDesc = await Deno.readTextFile(join(buildRoot, 'onnxruntime_webassembly.ar')).then(c => c.trim().split('\n'));
