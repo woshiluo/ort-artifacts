@@ -6,6 +6,11 @@ on:
         type: string
         description: "ONNX Runtime version (e.g. 1.18.0)"
         required: true
+      emsdk-version:
+        type: string
+        description: "Version of emsdk to use"
+        required: true
+        default: '3.1.51'
 jobs:
   build:
     name: Build
@@ -16,9 +21,12 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
       - name: Install wasm-pack
         run: cargo install wasm-pack
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.43
       - name: Run builder
         run:
-          deno run -A src/build.ts -v ${{ inputs.onnxruntime-version }} -W -s --xnnpack
+          deno run -A src/build.ts -v ${{ inputs.onnxruntime-version }} -W -s --xnnpack --emsdk ${{ inputs.emsdk-version }}
       - uses: actions/upload-artifact@v4
         with:
           name: ortrs-pkort_static-v${{ inputs.onnxruntime-version }}-wasm32-unknown-unknown

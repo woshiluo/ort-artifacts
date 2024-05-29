@@ -26,6 +26,7 @@ await new Command()
 	.option('--rocm', 'Enable ROCm EP')
 	.option('-A, --arch <arch:target-arch>', 'Configure target architecture for cross-compile', { default: 'x86_64' })
 	.option('-W, --wasm', 'Compile for WebAssembly (with patches)')
+	.option('--emsdk', 'Emsdk version to use for WebAssembly build', { default: '3.1.51' })
 	.action(async (options, ..._) => {
 		const root = Deno.cwd();
 
@@ -50,7 +51,7 @@ await new Command()
 			}
 
 			// there's no WAY im gonna try to wrestle with CMake on this one
-			await $`bash ./build.sh --build_wasm_static_lib --disable_rtti --disable_exceptions --disable_wasm_exception_catching --skip_tests --config Release --parallel --minimal_build --emsdk_version 3.1.51`;
+			await $`bash ./build.sh --build_wasm_static_lib --disable_rtti --disable_exceptions --disable_wasm_exception_catching --skip_tests --config Release --parallel --minimal_build --emsdk_version ${options.emsdk}`;
 
 			// emsdk 3.1.57, the default for ONNX Runtime v1.18.0, has an issue with vtables. Virtual methods (like
 			// those defined in onnxruntime/core/platform/env.h) are not properly overridden (like in onnxruntime/core/
