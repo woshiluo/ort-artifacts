@@ -147,7 +147,7 @@ await new Command()
 		}
 
 		if (platform === 'win32' && options.directml) {
-			args.push('-Donnxruntime_USE_DIRECTML=ON');
+			args.push('-Donnxruntime_USE_DML=ON');
 		}
 		if (platform === 'darwin' && options.coreml) {
 			args.push('-Donnxruntime_USE_COREML=ON');
