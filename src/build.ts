@@ -126,6 +126,9 @@ await new Command()
 					break;
 				}
 				case 'win32': {
+					// nvcc < 12.4 throws an error with VS 17.10
+					args.push('-DCMAKE_CUDA_FLAGS_INIT=-allow-unsupported-compiler');
+
 					// windows should ship with bsdtar which supports extracting .zips
 					const cudnnArchiveStream = await fetch(Deno.env.get('CUDNN_URL')!).then(c => c.body!);
 					const cudnnOutPath = join(root, 'cudnn');
