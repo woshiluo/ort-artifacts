@@ -176,7 +176,7 @@ jobs:
         run:
           deno run -A src/build.ts -v ${{ inputs.onnxruntime-version }} ${{ matrix.static && '-s' || '' }} ${{ matrix.args }}
         env:
-          CUDNN_URL: ${{ matrix.cuda-version && (startsWith(matrix.cuda-version, '12') && (runner.os == 'Linux' && secrets.CUDNN8_9_CUDA12_LINUX_URL || secrets.CUDNN8_9_CUDA12_WINDOWS_URL) || (runner.os == 'Linux' && secrets.CUDNN8_9_CUDA11_LINUX_URL || secrets.CUDNN8_9_CUDA11_WINDOWS_URL)) }}
+          CUDNN_URL: ${{ matrix.cuda-version && (startsWith(matrix.cuda-version, '12') && (runner.os == 'Linux' && secrets.CUDNN9_2_CUDA12_LINUX_URL || secrets.CUDNN9_2_CUDA12_WINDOWS_URL) || (runner.os == 'Linux' && secrets.CUDNN8_9_CUDA11_LINUX_URL || secrets.CUDNN8_9_CUDA11_WINDOWS_URL)) }}
           TENSORRT_URL: ${{ matrix.cuda-version && (startsWith(matrix.cuda-version, '12') && (runner.os == 'Linux' && secrets.TENSORRT10_0_CUDA12_LINUX_URL || secrets.TENSORRT10_0_CUDA12_WINDOWS_URL) || (runner.os == 'Linux' && secrets.TENSORRT10_0_CUDA11_LINUX_URL || secrets.TENSORRT10_0_CUDA11_WINDOWS_URL)) }}
       - uses: actions/upload-artifact@v4
         with:
