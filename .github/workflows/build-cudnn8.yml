@@ -1,0 +1,74 @@
+name: Build (cuDNN 8)
+on:
+  workflow_dispatch:
+    inputs:
+      onnxruntime-version:
+        type: string
+        description: "ONNX Runtime version (e.g. 1.18.0)"
+        required: true
+env:
+  GCC_VERSION: '11'
+  CMAKE_VERSION: '3.28'
+  PYTHON_VERSION: '3.10'
+  NODE_VERSION: '18'
+  XCODE_VERSION: '14.3'
+  MACOSX_DEPLOYMENT_TARGET: '10.15'
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            args: "-t --cuda --trt --xnnpack"
+            static: false
+            feature-set: train,cu12+cudnn8
+            cuda-version: '12.3.0'
+            runs-on: ubuntu-22.04
+          - target: x86_64-pc-windows-msvc
+            args: "-t --directml --cuda --trt --xnnpack"
+            static: false
+            feature-set: train,cu12+cudnn8
+            cuda-version: '12.2.2'
+            runs-on: windows-2022
+          - target: x86_64-unknown-linux-gnu
+            args: "--cuda --trt --xnnpack"
+            static: false
+            feature-set: cu12+cudnn8
+            cuda-version: '12.3.0'
+            runs-on: ubuntu-22.04
+          - target: x86_64-pc-windows-msvc
+            args: "--directml --cuda --trt --xnnpack"
+            static: false
+            feature-set: cu12+cudnn8
+            cuda-version: '12.2.2'
+            runs-on: windows-2022
+    steps:
+      - name: Remove unnecessary software
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+      - uses: actions/checkout@v4
+      - uses: pykeio/cuda-toolkit@v0.2.17
+        if: matrix.cuda-version && runner.os != 'macOS'
+        with:
+          cuda: ${{ matrix.cuda-version }}
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.43
+      - name: Run builder
+        run:
+          deno run -A src/build.ts -v ${{ inputs.onnxruntime-version }} ${{ matrix.static && '-s' || '' }} ${{ matrix.args }}
+        env:
+          CUDNN_URL: ${{ runner.os == 'Linux' && secrets.CUDNN8_9_CUDA12_LINUX_URL || secrets.CUDNN8_9_CUDA12_WINDOWS_URL }}
+          TENSORRT_URL: ${{ runner.os == 'Linux' && secrets.TENSORRT10_0_CUDA12_LINUX_URL || secrets.TENSORRT10_0_CUDA12_WINDOWS_URL }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ortrs-${{ !startsWith(matrix.target, 'wasm32') && 'msort' || 'pkort' }}_${{ matrix.static && 'static' || 'dylib' }}${{ matrix.feature-set != 'none' && format('_{0}', matrix.feature-set) || '' }}-v${{ inputs.onnxruntime-version }}-${{ matrix.target }}
+          path: artifact
+          if-no-files-found: error
