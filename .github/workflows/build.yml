@@ -53,12 +53,12 @@ jobs:
             args: "-t --coreml -A aarch64 --xnnpack"
             static: true
             feature-set: train
-            runs-on: macos-14
+            runs-on: macos-13
           - target: x86_64-apple-darwin
             args: "-t --coreml --xnnpack"
             static: true
             feature-set: train
-            runs-on: macos-14
+            runs-on: macos-13
           - target: x86_64-pc-windows-msvc
             args: "-t --directml --cuda --trt --xnnpack"
             static: false
@@ -113,12 +113,12 @@ jobs:
             args: "--coreml -A aarch64 --xnnpack"
             static: true
             feature-set: none
-            runs-on: macos-14
+            runs-on: macos-13
           - target: x86_64-apple-darwin
             args: "--coreml --xnnpack"
             static: true
             feature-set: none
-            runs-on: macos-14
+            runs-on: macos-13
           - target: x86_64-pc-windows-msvc
             args: "--directml --cuda --trt --xnnpack"
             static: false
