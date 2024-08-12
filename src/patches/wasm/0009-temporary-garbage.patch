@@ -3,19 +3,14 @@ Date: Mon, 21 Dec 2000 00:00:00 -0600
 Subject: Missing macros
 
 diff --git a/onnxruntime/core/mlas/lib/q4_dq.cpp b/onnxruntime/core/mlas/lib/q4_dq.cpp
-index 015d69de68..35af58fcf9 100644
+index 015d69de68..4976256e35 100644
 --- a/onnxruntime/core/mlas/lib/q4_dq.cpp
 +++ b/onnxruntime/core/mlas/lib/q4_dq.cpp
-@@ -20,6 +20,13 @@ Abstract:
+@@ -20,6 +20,8 @@ Abstract:
  
  #include "q4common.h"
  
-+#ifndef ORT_ENFORCE
-+#define ORT_ENFORCE(a, b)
-+#endif
-+#ifndef ORT_THROW
-+#define ORT_THROW(a)
-+#endif
++#include "core/common/common.h"
 +
  template<typename T>
  constexpr
