@@ -32,7 +32,7 @@ await new Command()
 
 		const onnxruntimeRoot = join(root, 'onnxruntime');
 		if (!await exists(onnxruntimeRoot)) {
-			await $`git clone https://github.com/microsoft/onnxruntime --recursive --single-branch --depth 1 --branch v${options.upstreamVersion}`;
+			await $`git clone https://github.com/microsoft/onnxruntime --recursive --single-branch --depth 1 --branch rel-1.19.0`;
 		}
 
 		$.cd(onnxruntimeRoot);

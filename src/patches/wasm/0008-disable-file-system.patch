@@ -23,7 +23,8 @@ index b3935e6..b0d1077 100644
 -           const file_path = UTF8ToString($2);
 -           const bytes = new Uint8Array(buffer_size);
 -           bytes.set(HEAPU8.subarray(buffer, buffer + buffer_size));
--           if (typeof process == 'object' && typeof process.versions == 'object' && typeof process.versions.node == 'string') {
+-           if (typeof process == 'object' && typeof process.versions == 'object' &&
+-               typeof process.versions.node == 'string') {
 -             // Node.js
 -             require('fs').writeFileSync(file_path, bytes);
 -           } else {
@@ -82,8 +83,9 @@ index b3935e6..b0d1077 100644
  
  Status Model::SaveWithExternalInitializers(Model& model,
 @@ -762,6 +742,7 @@ Status Model::SaveWithExternalInitializers(Model& model,
-                                            const PathString& file_path,
-                                            const std::string& external_file_name,
+                                            int fd,
+                                            const std::filesystem::path& file_path,
+                                            const std::filesystem::path& external_file_name,
                                             size_t initializer_size_threshold) {
 +#if !defined(__wasm__)
    if (fd < 0) {
@@ -365,11 +367,11 @@ index c1cd215..d2e440a 100644
 @@ -829,6 +829,7 @@ common::Status InferenceSession::RegisterGraphTransformer(
  }
  
- common::Status InferenceSession::SaveToOrtFormat(const PathString& filepath) const {
+ common::Status InferenceSession::SaveToOrtFormat(const std::filesystem::path& filepath) const {
 +#if !defined(__wasm__)
-   ORT_RETURN_IF_NOT(FLATBUFFERS_LITTLEENDIAN, "ort format only supports little-endian machines");
- 
    // Get the byte size of the ModelProto and round it to the next MB and use it as flatbuffers' init_size
+   // TODO: Investigate whether we should set a max size, and clarify the cost of having a buffer smaller than
+   // what the total flatbuffers serialized size will be.
 @@ -872,6 +873,9 @@ common::Status InferenceSession::SaveToOrtFormat(const PathString& filepath) con
    }
  

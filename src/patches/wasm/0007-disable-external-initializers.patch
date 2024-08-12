@@ -17,17 +17,17 @@ index 8a2db6d..c0b6475 100644
  }
  
 -#if !defined(__wasm__)
- static Status GetFileContent(
-     const Env& env, const ORTCHAR_T* file_path, FileOffsetType offset, size_t length,
-     void*& raw_buffer, OrtCallback& deleter) {
+ static Status GetFileContent(const Env& env, const std::filesystem::path& file_path, FileOffsetType offset,
+                              size_t length, void*& raw_buffer, OrtCallback& deleter) {
+   // query length if it is 0
 @@ -825,69 +825,7 @@ Status GetExtDataFromTensorProto(const Env& env, const ORTCHAR_T* model_path,
      ext_data_len = raw_data_safe_len;
      ext_data_deleter = OrtCallback{nullptr, nullptr};
    } else {
 -#if defined(__wasm__)
 -    ORT_RETURN_IF(file_offset < 0 || file_offset + raw_data_safe_len >= 4294967296,
--                  "External initializer: ", tensor_proto.name(),
--                  " offset: ", file_offset, " size to read: ", static_cast<size_t>(raw_data_safe_len),
+-                  "External initializer: ", tensor_proto.name(), " offset: ", file_offset,
+-                  " size to read: ", static_cast<size_t>(raw_data_safe_len),
 -                  " are out of bounds or can not be read in full (>4GB).");
 -
 -    auto buffer = std::make_unique<char[]>(raw_data_safe_len);
@@ -58,7 +58,8 @@ index 8a2db6d..c0b6475 100644
 -                                 }
 -
 -                                 try {
--                                   // Copy the file data (fileData,offset,length) into WebAssembly memory (HEAPU8,buffer,length).
+-                                   // Copy the file data (fileData,offset,length) into WebAssembly memory
+-                                   // (HEAPU8,buffer,length).
 -                                   HEAPU8.set(fileData.subarray(offset, offset + length), buffer);
 -                                   return 0;
 -                                 } catch {
@@ -85,12 +86,13 @@ index 8a2db6d..c0b6475 100644
 -      default:
 -        err_msg = "Unknown error occurred in memory copy.";
 -    }
--    return ORT_MAKE_STATUS(ONNXRUNTIME, FAIL, "Failed to load external data file \"", external_data_file_path, "\", error: ", err_msg);
+-    return ORT_MAKE_STATUS(ONNXRUNTIME, FAIL, "Failed to load external data file \"", external_data_file_path,
+-                           "\", error: ", err_msg);
 -#else
 +#if !defined(__wasm__)
-     size_t file_length;
-     // error reporting is inconsistent across platforms. Make sure the full path we attempted to open is included.
-     auto status = env.GetFileLength(external_data_file_path.c_str(), file_length);
+     // The GetFileContent function doesn't report error if the requested data range is invalid. Therefore we need to
+     // manually check file size first.
+     std::uintmax_t file_length = std::filesystem::file_size(external_data_file_path);
 @@ -905,6 +843,8 @@ Status GetExtDataFromTensorProto(const Env& env, const ORTCHAR_T* model_path,
      ORT_RETURN_IF_ERROR(GetFileContent(env, external_data_file_path.c_str(), file_offset, raw_data_safe_len,
                                         ext_data_buf, ext_data_deleter));

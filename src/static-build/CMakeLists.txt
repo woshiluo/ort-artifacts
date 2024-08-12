@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.26)
 project(onnxruntime_static_lib)
 
-set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded)
-set(ONNX_USE_MSVC_STATIC_RUNTIME ON)
-set(protobuf_MSVC_STATIC_RUNTIME ON)
+# set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded)
+# set(ONNX_USE_MSVC_STATIC_RUNTIME ON)
+# set(protobuf_MSVC_STATIC_RUNTIME ON)
 set(onnxruntime_BUILD_SHARED_LIB ON)
 
 add_definitions(-D_SILENCE_ALL_CXX23_DEPRECATION_WARNINGS)
