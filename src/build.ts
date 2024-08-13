@@ -207,9 +207,16 @@ await new Command()
 			// 	if (platform === 'win32') {
 			// 		args.push('-DONNX_USE_MSVC_STATIC_RUNTIME=OFF');
 			// 		args.push('-Dprotobuf_MSVC_STATIC_RUNTIME=OFF');
-			// 		args.push('-Dgtest_force_shared_crt=OFF');
+			// 		args.push('-Dgtest_force_shared_crt=ON');
 			// 	}
 			args.push('-Donnxruntime_BUILD_SHARED_LIB=ON');
+		} else {
+			if (platform === 'win32') {
+				args.push('-DONNX_USE_MSVC_STATIC_RUNTIME=OFF');
+				args.push('-Dprotobuf_MSVC_STATIC_RUNTIME=OFF');
+				args.push('-Dgtest_force_shared_crt=ON');
+				args.push('-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL');
+			}
 		}
 
 		args.push('-Donnxruntime_BUILD_UNIT_TESTS=OFF');
