@@ -39,6 +39,17 @@ await new Command()
 
 		await $`git reset --hard HEAD`;
 		await $`git clean -fd`;
+
+		const patchDir = join(root, 'src', 'patches', 'all');
+		for await (const patchFile of Deno.readDir(patchDir)) {
+			if (!patchFile.isFile) {
+				continue;
+			}
+
+			await $`git apply ${join(patchDir, patchFile.name)} --ignore-whitespace --recount --verbose`;
+			console.log(`applied ${patchFile.name}`);
+		}
+
 		if (options.wasm) {
 			const patchDir = join(root, 'src', 'patches', 'wasm');
 			for await (const patchFile of Deno.readDir(patchDir)) {
