@@ -38,12 +38,6 @@ jobs:
             cuda-version: '12.5.1'
             runs-on: ubuntu-22.04
           - target: x86_64-unknown-linux-gnu
-            args: "-t --cuda --trt --xnnpack"
-            static: false
-            feature-set: train,cu11
-            cuda-version: '11.8.0'
-            runs-on: ubuntu-22.04
-          - target: x86_64-unknown-linux-gnu
             args: "-t --rocm --xnnpack"
             static: false
             feature-set: train,rocm
@@ -64,12 +58,6 @@ jobs:
             static: false
             feature-set: train,cu12
             cuda-version: '12.5.1'
-            runs-on: windows-2022
-          - target: x86_64-pc-windows-msvc
-            args: "-t --directml --cuda --trt --xnnpack"
-            static: false
-            feature-set: train,cu11
-            cuda-version: '11.8.0'
             runs-on: windows-2022
           - target: aarch64-pc-windows-msvc
             args: "-t --directml --xnnpack"
@@ -98,12 +86,6 @@ jobs:
             cuda-version: '12.5.1'
             runs-on: ubuntu-22.04
           - target: x86_64-unknown-linux-gnu
-            args: "--cuda --trt --xnnpack"
-            static: false
-            feature-set: cu11
-            cuda-version: '11.8.0'
-            runs-on: ubuntu-22.04
-          - target: x86_64-unknown-linux-gnu
             args: "--rocm --xnnpack"
             static: false
             feature-set: rocm
@@ -125,12 +107,6 @@ jobs:
             feature-set: cu12
             cuda-version: '12.5.1'
             runs-on: windows-2022
-          - target: x86_64-pc-windows-msvc
-            args: "--directml --cuda --trt --xnnpack"
-            static: false
-            feature-set: cu11
-            cuda-version: '11.8.0'
-            runs-on: windows-2022
           - target: aarch64-pc-windows-msvc
             args: "--directml --xnnpack"
             static: true
@@ -141,11 +117,6 @@ jobs:
             static: true
             feature-set: none
             runs-on: windows-2022
-          - target: wasm32-unknown-unknown
-            args: "-W --xnnpack"
-            static: true
-            feature-set: none
-            runs-on: ubuntu-22.04
     steps:
       - name: Install cross-compile tools
         if: matrix.target == 'aarch64-unknown-linux-gnu'
@@ -176,10 +147,10 @@ jobs:
         run:
           deno run -A src/build.ts -v ${{ inputs.onnxruntime-version }} ${{ matrix.static && '-s' || '' }} ${{ matrix.args }}
         env:
-          CUDNN_URL: ${{ matrix.cuda-version && (startsWith(matrix.cuda-version, '12') && (runner.os == 'Linux' && secrets.CUDNN9_2_CUDA12_LINUX_URL || secrets.CUDNN9_2_CUDA12_WINDOWS_URL) || (runner.os == 'Linux' && secrets.CUDNN8_9_CUDA11_LINUX_URL || secrets.CUDNN8_9_CUDA11_WINDOWS_URL)) }}
-          TENSORRT_URL: ${{ matrix.cuda-version && (startsWith(matrix.cuda-version, '12') && (runner.os == 'Linux' && secrets.TENSORRT10_0_CUDA12_LINUX_URL || secrets.TENSORRT10_0_CUDA12_WINDOWS_URL) || (runner.os == 'Linux' && secrets.TENSORRT10_0_CUDA11_LINUX_URL || secrets.TENSORRT10_0_CUDA11_WINDOWS_URL)) }}
+          CUDNN_URL: ${{ matrix.cuda-version && (runner.os == 'Linux' && secrets.CUDNN9_2_CUDA12_LINUX_URL || secrets.CUDNN9_2_CUDA12_WINDOWS_URL) }}
+          TENSORRT_URL: ${{ matrix.cuda-version && (runner.os == 'Linux' && secrets.TENSORRT10_0_CUDA12_LINUX_URL || secrets.TENSORRT10_0_CUDA12_WINDOWS_URL) }}
       - uses: actions/upload-artifact@v4
         with:
-          name: ortrs-${{ !startsWith(matrix.target, 'wasm32') && 'msort' || 'pkort' }}_${{ matrix.static && 'static' || 'dylib' }}${{ matrix.feature-set != 'none' && format('_{0}', matrix.feature-set) || '' }}-v${{ inputs.onnxruntime-version }}-${{ matrix.target }}
+          name: ortrs_${{ matrix.static && 'static' || 'dylib' }}${{ matrix.feature-set != 'none' && format('_{0}', matrix.feature-set) || '' }}-v${{ inputs.onnxruntime-version }}-${{ matrix.target }}
           path: artifact
           if-no-files-found: error
