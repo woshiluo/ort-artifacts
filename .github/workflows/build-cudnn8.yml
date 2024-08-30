@@ -25,25 +25,25 @@ jobs:
             args: "-t --cuda --trt --xnnpack"
             static: false
             feature-set: train,cu12+cudnn8
-            cuda-version: '12.3.0'
+            cuda-version: '12.5.1'
             runs-on: ubuntu-22.04
           - target: x86_64-pc-windows-msvc
             args: "-t --directml --cuda --trt --xnnpack"
             static: false
             feature-set: train,cu12+cudnn8
-            cuda-version: '12.2.2'
+            cuda-version: '12.5.1'
             runs-on: windows-2022
           - target: x86_64-unknown-linux-gnu
             args: "--cuda --trt --xnnpack"
             static: false
             feature-set: cu12+cudnn8
-            cuda-version: '12.3.0'
+            cuda-version: '12.5.1'
             runs-on: ubuntu-22.04
           - target: x86_64-pc-windows-msvc
             args: "--directml --cuda --trt --xnnpack"
             static: false
             feature-set: cu12+cudnn8
-            cuda-version: '12.2.2'
+            cuda-version: '12.5.1'
             runs-on: windows-2022
     steps:
       - name: Remove unnecessary software
