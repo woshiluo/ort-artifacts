@@ -108,6 +108,7 @@ await new Command()
 			return;
 		}
 
+		const compilerFlags = [];
 		const args = [];
 		if (options.cuda) {
 			args.push('-Donnxruntime_USE_CUDA=ON');
@@ -187,7 +188,7 @@ await new Command()
 					switch (platform) {
 						case 'win32':
 							args.push('-A', 'ARM64');
-							args.push('-DCMAKE_CXX_FLAGS=-D_SILENCE_ALL_CXX23_DEPRECATION_WARNINGS');
+							compilerFlags.push('_SILENCE_ALL_CXX23_DEPRECATION_WARNINGS');
 							break;
 						case 'linux':
 							args.push(`-DCMAKE_TOOLCHAIN_FILE=${join(root, 'toolchains', 'aarch64-unknown-linux-gnu.cmake')}`);
@@ -230,7 +231,18 @@ await new Command()
 			}
 		}
 
+		// https://github.com/microsoft/onnxruntime/pull/21005
+		if (platform === 'win32') {
+			compilerFlags.push('_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR');
+		}
+
 		args.push('-Donnxruntime_BUILD_UNIT_TESTS=OFF');
+
+		if (compilerFlags.length > 0) {
+			const allFlags = compilerFlags.map(def => `-D${def}`).join(' ');
+			args.push(`-DCMAKE_C_FLAGS=${allFlags}`);
+			args.push(`-DCMAKE_CXX_FLAGS=${allFlags}`);
+		}
 
 		const sourceDir = options.static ? join(root, 'src', 'static-build') : 'cmake';
 		const outDir = join(root, 'output');
