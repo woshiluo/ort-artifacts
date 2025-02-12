@@ -51,16 +51,6 @@ await new Command()
 		}
 
 		if (options.wasm) {
-			const patchDir = join(root, 'src', 'patches', 'wasm');
-			for await (const patchFile of Deno.readDir(patchDir)) {
-				if (!patchFile.isFile) {
-					continue;
-				}
-
-				await $`git apply ${join(patchDir, patchFile.name)} --ignore-whitespace --recount --verbose`;
-				console.log(`applied ${patchFile.name}`);
-			}
-
 			// there's no WAY im gonna try to wrestle with CMake on this one
 			await $`bash ./build.sh --config Release --build_wasm_static_lib --enable_wasm_simd --enable_wasm_threads --skip_tests --disable_wasm_exception_catching --disable_rtti --use_webgpu --parallel --emsdk_version ${options.emsdk}`;
 
