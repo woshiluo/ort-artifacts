@@ -117,6 +117,11 @@ jobs:
             static: true
             feature-set: none
             runs-on: windows-2022
+          - target: wasm32-unknown-emscripten
+            args: "-W"
+            static: true
+            feature-set: none
+            runs-on: ubuntu-22.04
     steps:
       - name: Install cross-compile tools
         if: matrix.target == 'aarch64-unknown-linux-gnu'
@@ -140,9 +145,9 @@ jobs:
           wget https://repo.radeon.com/amdgpu-install/6.1.1/ubuntu/jammy/amdgpu-install_6.1.60101-1_all.deb
           sudo apt install ./amdgpu-install_6.1.60101-1_all.deb -y
           DEBIAN_FRONTEND=noninteractive amdgpu-install --accept-eula -y --usecase=rocm,hiplibsdk --no-dkms
-      - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@v2
         with:
-          deno-version: v1.43
+          deno-version: v2.x
       - name: Run builder
         run:
           deno run -A src/build.ts -v ${{ inputs.onnxruntime-version }} ${{ matrix.static && '-s' || '' }} ${{ matrix.args }}
