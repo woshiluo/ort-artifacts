@@ -24,6 +24,7 @@ await new Command()
 	.option('--coreml', 'Enable CoreML EP')
 	.option('--xnnpack', 'Enable XNNPACK EP')
 	.option('--rocm', 'Enable ROCm EP')
+	.option('--webgpu', 'Enable WebGPU EP')
 	.option('-A, --arch <arch:target-arch>', 'Configure target architecture for cross-compile', { default: 'x86_64' })
 	.option('-W, --wasm', 'Compile for WebAssembly (with patches)')
 	.option('--emsdk <version:string>', 'Emsdk version to use for WebAssembly build', { default: '3.1.59' })
@@ -133,6 +134,9 @@ await new Command()
 		}
 		if (options.xnnpack) {
 			args.push('-Donnxruntime_USE_XNNPACK=ON');
+		}
+		if (options.webgpu) {
+			args.push('-Donnxruntime_USE_WEBGPU=ON');
 		}
 
 		if (!options.wasm) {
