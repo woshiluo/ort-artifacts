@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 project(onnxruntime_static_lib)
 
-set(onnxruntime_BUILD_SHARED_LIB OFF)
+set(onnxruntime_BUILD_SHARED_LIB ON) # This was on even though these are static builds?!
 
 add_definitions(-D_SILENCE_ALL_CXX23_DEPRECATION_WARNINGS)
 
