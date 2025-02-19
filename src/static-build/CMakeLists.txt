@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 project(onnxruntime_static_lib)
 
-set(onnxruntime_BUILD_SHARED_LIB ON)
+set(onnxruntime_BUILD_SHARED_LIB OFF)
 
 add_definitions(-D_SILENCE_ALL_CXX23_DEPRECATION_WARNINGS)
 
@@ -133,6 +133,11 @@ function(bundle_static_library bundled_target_name)
             add_dependencies(bundling_${bundled_target_name} ${target_name})
         endif()
     endforeach()
+
+    if(MSVC)
+        set_property(TARGET ${bundled_target_name} PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
 
     add_library(${bundled_target_name} STATIC IMPORTED GLOBAL)
     set_target_properties(${bundled_target_name}
