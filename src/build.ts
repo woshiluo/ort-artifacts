@@ -178,16 +178,25 @@ await new Command()
 		// 	args.push('-Dgtest_force_shared_crt=OFF');
 		// }
 
-		if (!options.static) {
-			// actually, with CUDA & TensorRT, we could statically link the onnxruntime core (just not the EPs)
-			// ... could be the move (just needs the below fix for windows)
-			// 	if (platform === 'win32') {
-			// 		args.push('-DONNX_USE_MSVC_STATIC_RUNTIME=OFF');
-			// 		args.push('-Dprotobuf_MSVC_STATIC_RUNTIME=OFF');
-			// 		args.push('-Dgtest_force_shared_crt=ON');
-			// 	}
-			args.push('-Donnxruntime_BUILD_SHARED_LIB=ON');
-		} else {
+		// if (!options.static) {
+		// 	// actually, with CUDA & TensorRT, we could statically link the onnxruntime core (just not the EPs)
+		// 	// ... could be the move (just needs the below fix for windows)
+		// 	// 	if (platform === 'win32') {
+		// 	// 		args.push('-DONNX_USE_MSVC_STATIC_RUNTIME=OFF');
+		// 	// 		args.push('-Dprotobuf_MSVC_STATIC_RUNTIME=OFF');
+		// 	// 		args.push('-Dgtest_force_shared_crt=ON');
+		// 	// 	}
+		// 	args.push('-Donnxruntime_BUILD_SHARED_LIB=ON');
+		// } else {
+		// 	if (platform === 'win32') {
+		// 		args.push('-DONNX_USE_MSVC_STATIC_RUNTIME=ON');
+		// 		args.push('-Dprotobuf_MSVC_STATIC_RUNTIME=ON');
+		// 		args.push('-Dgtest_force_shared_crt=OFF');
+		// 		args.push('-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded');
+		// 	}
+		// }
+
+		if (options.static) {
 			if (platform === 'win32') {
 				args.push('-DONNX_USE_MSVC_STATIC_RUNTIME=ON');
 				args.push('-Dprotobuf_MSVC_STATIC_RUNTIME=ON');
