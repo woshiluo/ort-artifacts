@@ -4,8 +4,7 @@ on:
     inputs:
       onnxruntime-version:
         type: string
-        description: "ONNX Runtime version (e.g. 1.18.0)"
-        required: true
+        description: "ONNX Runtime version (e.g. 1.18.0); fallbacks to main branch"
 env:
   GCC_VERSION: '11'
   CMAKE_VERSION: '3.28'
