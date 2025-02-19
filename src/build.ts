@@ -171,11 +171,12 @@ await new Command()
 			args.push('-Donnxruntime_DISABLE_RTTI=OFF');
 		}
 
-		if (platform === 'win32' && !options.static) {
-			args.push('-DONNX_USE_MSVC_STATIC_RUNTIME=OFF');
-			args.push('-Dprotobuf_MSVC_STATIC_RUNTIME=OFF');
-			args.push('-Dgtest_force_shared_crt=OFF');
-		}
+		// Already defined below.
+		// if (platform === 'win32' && !options.static) {
+		// 	args.push('-DONNX_USE_MSVC_STATIC_RUNTIME=OFF');
+		// 	args.push('-Dprotobuf_MSVC_STATIC_RUNTIME=OFF');
+		// 	args.push('-Dgtest_force_shared_crt=OFF');
+		// }
 
 		if (!options.static) {
 			// actually, with CUDA & TensorRT, we could statically link the onnxruntime core (just not the EPs)

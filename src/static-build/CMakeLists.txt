@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.26)
 project(onnxruntime_static_lib)
 
-set(onnxruntime_BUILD_SHARED_LIB ON) # This was on even though these are static builds?!
+# Revert: https://github.com/pykeio/ort-artifacts-staging/commit/59a6e9be80558b6988996e678c99785c783edf49#diff-6c4b1e1d2d8ac0dfe876c5cff2b2e7748429ebcb342b1d2509faed649f356f2b
+set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded)
+set(ONNX_USE_MSVC_STATIC_RUNTIME ON)
+set(protobuf_MSVC_STATIC_RUNTIME ON)
+set(onnxruntime_BUILD_SHARED_LIB ON)
 
 add_definitions(-D_SILENCE_ALL_CXX23_DEPRECATION_WARNINGS)
 
@@ -138,11 +142,6 @@ function(bundle_static_library bundled_target_name)
     set_target_properties(${bundled_target_name}
         PROPERTIES
         IMPORTED_LOCATION ${bundled_target_full_name})
-
-    if(MSVC)
-        set_property(TARGET ${bundled_target_name} PROPERTY
-            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    endif()
 
     foreach(target_name IN ITEMS ${ARGN})
         set_property(TARGET ${bundled_target_name} APPEND
