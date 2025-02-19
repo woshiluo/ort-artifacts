@@ -5,6 +5,7 @@ on:
       onnxruntime-version:
         type: string
         description: "ONNX Runtime version (e.g. 1.18.0); fallbacks to main branch"
+        default: main
 env:
   GCC_VERSION: '11'
   CMAKE_VERSION: '3.28'
