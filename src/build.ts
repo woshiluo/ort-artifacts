@@ -202,6 +202,7 @@ await new Command()
 				args.push('-Dprotobuf_MSVC_STATIC_RUNTIME=ON');
 				args.push('-Dgtest_force_shared_crt=OFF');
 				args.push('-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded');
+				args.push('-DABSL_MSVC_STATIC_RUNTIME=ON');
 			}
 		}
 
