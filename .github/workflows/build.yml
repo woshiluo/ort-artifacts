@@ -113,7 +113,7 @@ jobs:
           #   feature-set: none
           #   runs-on: windows-2022
           - target: x86_64-pc-windows-msvc
-            args: "--directml --xnnpack"
+            args: "--xnnpack"
             static: true
             feature-set: none
             runs-on: windows-2022
